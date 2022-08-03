@@ -29,20 +29,29 @@
       ref="chatContainer">
       </div>
       <div class="chat-submit">
-        <div v-if="isFocus && !isEmpty" class="suggest-history-box">
-          <div class="suggestions" v-for="(list,index) in suggestionList.lists" :key="index">
-            <div class="suggestion-item" @click="checkToSearch(list)">{{list}}</div>
-          </div>
-        </div>
-        <div v-if="isFocus && isEmpty" class="suggest-history-box">
-          <div class="history-suggestion-title">
-            <div>搜索历史</div>
-            <div class="history-clear" @click="clear-history()">
-              <div>清空</div>
+        <div @mouseenter="isMouseOnSerchBox = true"
+            @mouseleave="isMouseOnSerchBox = false">
+           <div v-show="isFocus && !isEmpty" class="suggest-history-box">
+            <div class="suggestions" v-for="(list,index) in suggestionList.lists.slice(0, 6)"
+              :key="index"
+              @click="checkToSearch(list)"
+            >
+              <div class="suggestion-item" >{{list}}</div>
             </div>
           </div>
-          <div class="suggestions history-suggestion" v-for="(historyList,index) in historyLists" :key="index" ref="historyList" @click="selectHistory(index)">
-            <div class="suggestion-item">{{historyList}}</div>
+          <div v-show="isFocus && isEmpty" class="suggest-history-box">
+            <div class="history-suggestion-title">
+              <div>搜索历史</div>
+              <div class="history-clear">
+                <div style="width: 80px;" @click="clearHistory()">清空</div>
+              </div>
+            </div>
+            <div class="suggestions history-suggestion"
+            v-for="(historyList,index) in historyLists.value.slice(0, 6)"
+            :key="index" ref="historyList"
+            @click="checkToSearch(historyList)">
+              <div class="suggestion-item">{{historyList}}</div>
+            </div>
           </div>
         </div>
         <p class="chat-hint" v-show="emptyShow">
@@ -70,6 +79,7 @@
 
 import { defineComponent, ref, watchEffect, reactive, onMounted, onUnmounted } from 'vue'
 import { debounce } from '@/utils/throttle'
+import store from '@/store'
 export default defineComponent({
   name: 'chat',
   props: {
@@ -86,6 +96,7 @@ export default defineComponent({
     const openChat = ref(true)
     const openPropmpt = ref(false)
     const emptyShow = ref(false)
+    const isMouseOnSerchBox = ref(false)
     const searchQuery = ref('')
     const isFocus = ref(false)
     const chatContainer = ref(null)
@@ -94,11 +105,15 @@ export default defineComponent({
     const suggestionList = reactive({
       lists: []
     })
-    const historyLists = ['1', '2']
+    const suggest = ['1', '12', '13', '112']
+    // 历史记录
+    const historyLists = reactive({
+      value: []
+    })
+    // 检测输入值，确定建议搜索
     watchEffect(async () => {
-      // lists = ['A', 'B', 'C']
       if (searchQuery.value !== '') {
-        suggestionList.lists = historyLists.filter((item) => {
+        suggestionList.lists = suggest.filter((item) => {
           return item.toString().indexOf(searchQuery.value) !== -1
         })
       } else {
@@ -110,6 +125,7 @@ export default defineComponent({
         isEmpty.value = true
       }
     })
+    // 创建发送信息框
     const createInfo = (name, value) => {
       let chatTime = new Date()
       chatTime = chatTime.toLocaleTimeString()
@@ -126,10 +142,12 @@ export default defineComponent({
       chatContainer.value.appendChild(nodeP)
       chatContainer.value.scrollTop = chatContainer.value.scrollHeight
     }
+    // 发送信息
     let timer = null
     const sendMessage = () => {
       if (searchQuery.value !== '') {
         createInfo('you', searchQuery.value)
+        store.commit('SetSearchValue', searchQuery.value)
         searchQuery.value = null
         blurShow()
       } else {
@@ -139,29 +157,49 @@ export default defineComponent({
         }, 1000)
       }
     }
+    // 清除历史记录
+    const clearHistory = () => {
+      historyLists.value = []
+      localStorage.removeItem('historyList')
+    }
+    // 发送
     const submit = () => {
       sendMessage()
     }
-    const checkToSearch = () => {
-      console.log('s')
+    const checkToSearch = (value) => {
+      searchQuery.value = value
+      submit()
     }
+    // 关闭聊天框
     const onCancel = () => {
       openChat.value = !openChat.value
     }
+    // 鼠标移入：打开消息提示
     const mouseOver = debounce(() => {
       openPropmpt.value = true
     }, 1000, true)
+    // 鼠标移出：关闭消息提示
     const mouseLeave = debounce(() => {
       openPropmpt.value = false
     }, 1000, true)
+    // 焦点
     const focusShow = () => {
       isFocus.value = true
     }
+    // 失焦 一个重点：判断此时鼠标此时在搜索建议框内，如果移走，则点击消失，否则就点击就触发对应的事件
     const blurShow = () => {
-      isFocus.value = false
+      if (!isMouseOnSerchBox.value) {
+        isFocus.value = false
+      } else {
+        isMouseOnSerchBox.value = false
+      }
     }
     onMounted(() => {
       createInfo('service', '您好,请说出您的疑问')
+      // 如果本地存储的数据historyList有值，直接赋值给data中的historyList
+      if (JSON.parse(localStorage.getItem('historyList'))) {
+        historyLists.value = JSON.parse(localStorage.getItem('historyList'))
+      }
     })
     onUnmounted(() => {
       clearTimeout(timer)
@@ -182,7 +220,9 @@ export default defineComponent({
       historyLists,
       submit,
       checkToSearch,
-      chatContainer
+      chatContainer,
+      clearHistory,
+      isMouseOnSerchBox
     }
   }
 })

@@ -9,21 +9,18 @@
     hide-required-asterisk
     show-message
   >
-    <el-form-item label="您的邮箱:" prop="userEmail">
-      <el-autocomplete
-        v-model="ruleForm.userEmail"
-        :fetch-suggestions="querySearchEmail"
-        :trigger-on-focus="false"
-        placeholder="请输入您的邮箱"
+    <el-form-item label="用户名:" prop="userName">
+      <el-input
+        v-model="ruleForm.userName"
+        placeholder="请输入用户名"
         clearable
-        type="email"
       >
-      </el-autocomplete>
+      </el-input>
     </el-form-item>
-    <el-form-item label="您的密码:" prop="userPassword">
+    <el-form-item label="密码:" prop="userPassword">
       <el-input
         v-model="ruleForm.userPassword"
-        placeholder="请输入您的密码"
+        placeholder="请输入密码"
         show-password
         clearable
       ></el-input>
@@ -45,32 +42,49 @@
 </template>
 <script>
 import { defineComponent, reactive, ref } from 'vue'
-import queryEmail from '@/utils/queryEmail'
+import { login, getUser } from '@/api/index.js'
+import { ElLoading } from 'element-plus'
+import store from '@/store'
+import { useRouter } from 'vue-router'
 export default defineComponent({
   name: 'loginForm',
   setup () {
-    const ruleForm = reactive({ userEmail: '', userPassword: '' })
+    const ruleForm = reactive({ userName: '', userPassword: '' })
     const ruleFormRef = ref()
+    const router = useRouter()
     const rules = {
-      userEmail: [
-        { required: true, message: '请输入邮箱', trigger: 'blur' },
-        { min: 6, max: 40, message: '长度在 6 到 40 个字符', trigger: 'blur' },
-        { required: true, type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }
+      userName: [
+        { required: true, message: '请输入用户名', trigger: 'blur' }
       ],
       userPassword: [
         { required: true, message: '请输入密码', trigger: 'blur' },
         { min: 6, message: '密码长度至少为6', trigger: 'blur' }
       ]
     }
-    const querySearchEmail = (queryString, callback) => {
-      const results = queryEmail(queryString)
-      callback(results)
-    }
     const submitForm = async (formEl) => {
       if (!formEl) return
       await formEl.validate((valid, fields) => {
         if (valid) {
           console.log('submit!')
+          const loading = ElLoading.service({
+            lock: true,
+            text: '拼命加载中...',
+            background: 'rgba(255,255,255,0.5)'
+          })
+          login(ruleForm.userName, ruleForm.userPassword)
+            .then(async (res) => {
+              store.commit('SetJwt', res.data)
+              const info = await getUser()
+              store.commit('SetUser', info.data)
+              loading.close()
+              alert('登录成功')
+              router.push('/')
+            })
+            .catch((err) => {
+              loading.close()
+              console.log(err)
+              alert('登录失败，请检查您的账号及密码信息......')
+            })
         } else {
           console.log('error submit!', fields)
         }
@@ -80,8 +94,7 @@ export default defineComponent({
       ruleForm,
       rules,
       submitForm,
-      ruleFormRef,
-      querySearchEmail
+      ruleFormRef
     }
   }
 })

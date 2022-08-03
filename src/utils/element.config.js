@@ -7,7 +7,8 @@ import {
   ElAutocomplete,
   ElMenu,
   ElMenuItem,
-  ElAvatar
+  ElAvatar,
+  ElLoading
 } from 'element-plus'
 
 const components = [
@@ -18,7 +19,8 @@ const components = [
   ElAutocomplete,
   ElMenu,
   ElMenuItem,
-  ElAvatar
+  ElAvatar,
+  ElLoading
 ]
 
 export default function (app) {

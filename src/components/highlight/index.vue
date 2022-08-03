@@ -47,23 +47,29 @@ export default defineComponent({
       }
     ])
     const move = (e) => {
-      const max = 15
-      const box = e.currentTarget.getBoundingClientRect()
-      let calcX = Math.min(Math.max((e.clientX - box.left) / box.width, 0), 1)
-      let calcY = Math.min(Math.max((e.clientY - box.top) / box.height, 0), 1)
-      calcX = (max - calcX * max * 2).toFixed(2)
-      calcY = (calcY * max * 2 - max).toFixed(2)
-      e.currentTarget.style.transform = 'perspective(1000px)' +
-        ' rotateX(' + calcY + 'deg) ' +
-        'rotateY(' + calcX + 'deg) ' +
-        'scale3d(1, 1, 1)'
+      const tartget = e.currentTarget
+      window.requestAnimationFrame(function () {
+        const max = 15
+        const box = tartget.getBoundingClientRect()
+        let calcX = Math.min(Math.max((e.clientX - box.left) / box.width, 0), 1)
+        let calcY = Math.min(Math.max((e.clientY - box.top) / box.height, 0), 1)
+        calcX = (max - calcX * max * 2).toFixed(2)
+        calcY = (calcY * max * 2 - max).toFixed(2)
+        tartget.style.transform = 'perspective(1000px)' +
+          ' rotateX(' + calcY + 'deg) ' +
+          'rotateY(' + calcX + 'deg) ' +
+          'scale3d(1, 1, 1)'
+      })
     }
     const hover = (e) => {
       const element = e.currentTarget.firstElementChild
       element.style.opacity = 1
     }
     const leave = (e) => {
-      e.currentTarget.style.transform = 'none'
+      const temp = e.currentTarget
+      window.requestAnimationFrame(function () {
+        temp.style.transform = 'rotateX(0) rotateY(0)'
+      })
       const element = e.currentTarget.firstElementChild
       element.style.opacity = 0
     }
@@ -110,6 +116,7 @@ export default defineComponent({
       align-items: center;
       max-width: 1200px;
       z-index: 1;
+      transform-style: preserve-3d;
       .card {
         position: relative;
         width: 200px;
@@ -124,9 +131,8 @@ export default defineComponent({
         align-items: center;
         border-top: 1px solid rgba(255, 255, 255, 0.5);
         border-left: 1px solid rgba(255, 255, 255, 0.5);
-        backdrop-filter: blur(5px);
-        will-change: transform;
-        transform: perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1);
+        transform-style: preserve-3d;
+        transition: all .1s;
         .content {
           height: 80%;
           padding: 25px 20px;

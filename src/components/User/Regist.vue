@@ -44,7 +44,7 @@
       ></el-input>
     </el-form-item>
     <el-form-item>
-      <el-button type="primary" @click="onSubmit('ruleForm')"
+      <el-button type="primary" @click="submitForm(ruleFormRef)"
         >确认</el-button
       >
       <el-button>取消</el-button>
@@ -57,6 +57,9 @@
 <script>
 import { defineComponent, reactive, ref } from 'vue'
 import queryEmail from '@/utils/queryEmail'
+import { ElLoading } from 'element-plus'
+import { register } from '@/api/index.js'
+// import { useRouter } from 'vue-router'
 export default defineComponent({
   name: 'RegistForm',
   setup () {
@@ -70,7 +73,7 @@ export default defineComponent({
     const validatePass2 = (rule, value, callback) => {
       if (value === '') {
         callback(new Error('Please input the password again'))
-      } else if (value !== ruleForm.pass) {
+      } else if (value !== ruleForm.userPassword) {
         callback(new Error("Two inputs don't match!"))
       } else {
         callback()
@@ -82,7 +85,7 @@ export default defineComponent({
       ],
       userEmail: [
         { required: true, message: '请输入邮箱', trigger: 'blur' },
-        { min: 6, max: 40, message: '长度在 6 到 40 个字符', trigger: 'blur' },
+        { min: 6, max: 40, message: '长度在8 到 40 个字符', trigger: 'blur' },
         { required: true, type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }
       ],
       userPassword: [
@@ -97,14 +100,37 @@ export default defineComponent({
       const results = queryEmail(queryString)
       callback(results)
     }
-    const submitForm = (formEl) => {
+    // const router = useRouter()
+    const submitForm = async (formEl) => {
       if (!formEl) return
-      formEl.validate((valid) => {
+      await formEl.validate((valid, fields) => {
         if (valid) {
           console.log('submit!')
+          const loading = ElLoading.service({
+            lock: true,
+            text: '拼命加载中...',
+            background: 'rgba(255,255,255,0.5)'
+          })
+          register(ruleForm.userName, ruleForm.userEmail,
+            ruleForm.userPassword,
+            ruleForm.userPassword2)
+            .then((data) => {
+              loading.close()
+              alert('注册成功,注意查邮件激活账号!')
+              // router.push({ path: '/login' })
+            })
+            .catch((err) => {
+              loading.close()
+              let info = '请求错误'
+              try {
+                info = err.response.data
+              } catch {
+                info = '请求错误'
+              }
+              alert(JSON.stringify(info))
+            })
         } else {
-          console.log('error submit!')
-          return false
+          console.log('error submit!', fields)
         }
       })
     }

@@ -1,6 +1,6 @@
 const drag = (app, options) => {
   app.directive('drag', {
-    mounted (el, binding) {
+    onMounted (el, binding) {
       el.onmousedown = (event) => {
         // 记录鼠标按下的位置
         const mouseXStart = event.clientX
