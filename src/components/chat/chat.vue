@@ -519,5 +519,4 @@ export default defineComponent({
     }
   }
 }
-
 </style>
