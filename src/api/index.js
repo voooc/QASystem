@@ -3,8 +3,8 @@ import axios from './request'
 const ip = 'http://127.0.0.1:8000'
 const baseUrl = `${ip}/api/v1`
 // 获取搜索结果
-export function getSearchResult (q, p) {
-  return axios.get(`${baseUrl}/search?q=${q}&p=${p}`)
+export function getSearchResult (qusetion) {
+  return axios.get(`${baseUrl}/answer?q=${qusetion}`)
 }
 // 根据输入的部分文本获取搜索建议
 export function getSearchSuggest (someText) {

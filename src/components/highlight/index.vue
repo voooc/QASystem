@@ -49,16 +49,18 @@ export default defineComponent({
     const move = (e) => {
       const tartget = e.currentTarget
       window.requestAnimationFrame(function () {
-        const max = 15
+        const max = 10
         const box = tartget.getBoundingClientRect()
-        let calcX = Math.min(Math.max((e.clientX - box.left) / box.width, 0), 1)
-        let calcY = Math.min(Math.max((e.clientY - box.top) / box.height, 0), 1)
-        calcX = (max - calcX * max * 2).toFixed(2)
-        calcY = (calcY * max * 2 - max).toFixed(2)
-        tartget.style.transform = 'perspective(1000px)' +
-          ' rotateX(' + calcY + 'deg) ' +
-          'rotateY(' + calcX + 'deg) ' +
-          'scale3d(1, 1, 1)'
+        // let calcX = Math.min(Math.max((e.clientX - box.left) / box.width, 0), 1)
+        // let calcY = Math.min(Math.max((e.clientY - box.top) / box.height, 0), 1)
+        // calcX = (max - calcX * max * 2).toFixed(2)
+        // calcY = (calcY * max * 2 - max).toFixed(2)
+        const calcX = -(e.clientY - box.y - (box.height / 2)) / max
+        const calcY = (e.clientX - box.x - (box.width / 2)) / max
+        tartget.style.transform =
+          ' rotateX(' + calcX + 'deg) ' +
+          'rotateY(' + calcY + 'deg) '
+          // 'scale3d(1, 1, 1)'
       })
     }
     const hover = (e) => {
@@ -117,6 +119,7 @@ export default defineComponent({
       max-width: 1200px;
       z-index: 1;
       transform-style: preserve-3d;
+      perspective: 500px;
       .card {
         position: relative;
         width: 200px;

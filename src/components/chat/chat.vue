@@ -79,6 +79,7 @@
 
 import { defineComponent, ref, watchEffect, reactive, onMounted, onUnmounted } from 'vue'
 import { debounce } from '@/utils/throttle'
+import { getSearchResult, getSearchSuggest } from '@/api'
 import store from '@/store'
 export default defineComponent({
   name: 'chat',
@@ -105,7 +106,6 @@ export default defineComponent({
     const suggestionList = reactive({
       lists: []
     })
-    const suggest = ['1', '12', '13', '112']
     // 历史记录
     const historyLists = reactive({
       value: []
@@ -113,6 +113,7 @@ export default defineComponent({
     // 检测输入值，确定建议搜索
     watchEffect(async () => {
       if (searchQuery.value !== '') {
+        const suggest = await getSearchSuggest(searchQuery.value)
         suggestionList.lists = suggest.filter((item) => {
           return item.toString().indexOf(searchQuery.value) !== -1
         })
@@ -144,9 +145,11 @@ export default defineComponent({
     }
     // 发送信息
     let timer = null
-    const sendMessage = () => {
+    const sendMessage = async () => {
       if (searchQuery.value !== '') {
         createInfo('you', searchQuery.value)
+        const response = await getSearchResult(searchQuery.value)
+        createInfo('service', response.data.answer)
         store.commit('SetSearchValue', searchQuery.value)
         searchQuery.value = null
         blurShow()

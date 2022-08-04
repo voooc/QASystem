@@ -8,7 +8,6 @@
   >
     <el-menu-item index="0">QA</el-menu-item>
     <el-menu-item index="/">首页</el-menu-item>
-    <el-menu-item index="2">知识图谱</el-menu-item>
     <template v-if="store.state.User">
       <el-avatar :src="circleUrl" class="login" />
     </template>
